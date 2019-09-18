@@ -1,0 +1,59 @@
+<html>
+	<head>
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript">
+
+
+			var socket = io.connect();
+
+			socket.on('connect', function() {
+				console.log("Connected");
+			});
+
+			// Receive from any event
+			socket.on('chatmessage', function (data) {
+				//console.log(data);
+				var col = data.split(",");
+				var c = document.getElementById("myCanvas");
+				var ctx = c.getContext("2d");
+				//var colorr = Math.floor(Math.random() * 255);
+				ctx.fillStyle = 'rgb(255,'+ col[2] +',0)';
+				console.log("col[0]:" + col[0]);
+				console.log("col[1]:" + col[1]);
+				ctx.fillRect(col[0], col[1], 5, 5);
+				//ctx.fillRect(0, 0, 100, 100);
+	// 			document.getElementById('messages').innerHTML = "" + data +
+ // + "" + document.getElementById('messages').innerHTML;
+			});
+
+			var sendmessage = function(message) {
+				// console.log("chatmessage: " + message);
+				socket.emit('chatmessage', message);
+			};
+
+			window.addEventListener('mousemove', function (e) {
+				var colorr = Math.floor(Math.random() * 255);
+				sendmessage(e.x + ", " +e.y+","+ colorr);
+				//console.log("e.x:"+ e.x);
+
+			});
+
+		</script>
+		<style>
+		#myCanvas {
+			/* height: 1080px;
+    		width: 1920px; */
+    		background-color: black;
+	   }
+		</style>
+	</head>
+ <body>
+ <!-- <div id="messages">
+ No Messages Yet
+ </div>
+ <input type="text" id="message" name="message"> -->
+ <canvas id="myCanvas" width="1920px" height="1080px" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+ <!-- <input type="submit" value="submit" onclick="sendmessage(document.getElementById('message').value);"> -->
+ </body>
+</html>
