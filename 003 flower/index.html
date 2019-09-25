@@ -1,0 +1,98 @@
+<html>
+	<head>
+		<script src="js/three.js"></script>
+		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+
+
+
+
+
+
+	</head>
+
+	<body>
+		<script>
+
+		var scene = new THREE.Scene();
+		var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+		var renderer = new THREE.WebGLRenderer();
+
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		document.body.appendChild( renderer.domElement );
+
+		scene.add( new THREE.AmbientLight(0x444444));
+
+
+
+
+
+		var dirLight = new THREE.DirectionalLight(0xffffff);
+		dirLight.position.set(200, 200, 1000).normalize();
+		camera.add(dirLight);
+		camera.add(dirLight.target);
+
+
+		var socket = io.connect();
+
+		socket.on('connect', function() {
+			console.log("Connected");
+		});
+
+		// Receive from any event
+		socket.on('chatmessage', function (data) {
+			//console.log(data);
+			var col = data.split(",");
+
+			console.log("col[0]:" + col[0]);
+			console.log("col[1]:" + col[1]);
+
+			var geometry = new THREE.BoxGeometry( col[0]*2/window.innerWidth, col[0]*2/window.innerWidth, 3 );
+			var material = new THREE.MeshPhongMaterial({color:Math.random() * 0x4422ff});
+			material.transparent = true;
+			var cube = new THREE.Mesh( geometry, material );
+			scene.add( cube );
+
+			camera.position.z = 5;
+
+			var animate = function () {
+				requestAnimationFrame( animate );
+
+				cube.rotation.x += 0.01;
+				cube.rotation.y += 0.01;
+
+				renderer.render( scene, camera );
+			};
+
+			animate();
+
+
+
+
+
+
+
+		});
+
+		var sendmessage = function(message) {
+			// console.log("chatmessage: " + message);
+			socket.emit('chatmessage', message);
+		};
+
+		window.addEventListener('click', function (e) {
+
+			sendmessage(e.x + ", " +e.y);
+			//console.log("e.x:"+ e.x);
+
+
+
+		});
+
+
+
+		</script>
+
+
+
+	</body>
+</html>
