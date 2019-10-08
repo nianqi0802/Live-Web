@@ -1,0 +1,238 @@
+<html>
+	<head>
+		<style>
+	       /* Set the size of the div element that contains the map */
+	      #map {
+	        height: 700px;
+	        width: 100%;  /* The width is the width of the web page */
+	       }
+	    </style>
+
+
+
+
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+
+		var socket = io.connect();
+		var positionx;
+		var positiony;
+		var la;
+		var lo;
+
+		console.log('initial x = ' + positionx);
+
+		socket.on('connect', function() {
+			console.log("Connected");
+		});
+
+		// socket.on('location', function(data) {
+		// 	console.log("location" + data);
+		// 	var col = data.split(",");
+		// 	la = col[0];
+		// 	lo = col[1];
+		// });
+
+
+
+		window.addEventListener('load', function() {
+			getLocation();
+
+		});
+
+
+
+		var map;
+		var marker;
+
+		var uluru;
+
+		// Initialize and add the map
+		function initMap() {
+		// The location of Uluru
+			// var uluru = {lat: positionx, lng: positiony};
+			var center = {lat: 40.72, lng: -73.98};
+		// The map, centered at Uluru
+			map = new google.maps.Map(
+			document.getElementById('map'), {zoom: 13, center: center});
+		// The marker, positioned at Uluru
+			// map.addListener('click', function() {
+
+
+
+
+
+
+				socket.on('image', function(imageData) {
+					// Incoming image..
+
+						console.log(imageData);
+
+					document.getElementById('otherimage').src = imageData.image;
+
+					addMarker(imageData.image,imageData.la,imageData.lo);
+
+					marker.setMap(map);
+
+				});
+
+			// });
+
+
+
+		}
+
+		function getLocation() {
+		    if (navigator.geolocation) { //check if geolocation is available
+		                  navigator.geolocation.getCurrentPosition(function(position){
+		                    positionx = position.coords.latitude;
+		                    positiony = position.coords.longitude;
+
+		                  });
+		              }
+
+
+
+
+
+
+		}
+
+		function addMarker(x,y,z){
+		    //uluru = {lat: positionx, lng: positiony};
+
+		    marker = new google.maps.Marker({
+		        position: new google.maps.LatLng(y,z),
+		        icon : x,
+		        map: map
+		    });
+
+
+		}
+
+
+
+			// Receive a message
+			socket.on('message', function(data) {
+				console.log("Got: " + data);
+				document.getElementById('messages').innerHTML += data;
+      });
+
+      socket.on("position", function(data) {
+        //console.log(data);
+      });
+
+			// Receive from any event
+			socket.on('news', function (data) {
+				console.log(data);
+			});
+
+
+
+			var sendmessage = function() {
+				var message = document.getElementById('message').value;
+				console.log("Sending: " + message);
+
+				// Send a messaage
+				socket.send(message);
+			};
+
+			var sendother = function() {
+				var othermessage = document.getElementById('message').value;
+				console.log("sending: " + othermessage);
+
+				// Send any kind of data with a custom event
+				//socket.emit('otherevent',{ othermessage: othermessage });
+				socket.emit('otherevent', othermessage);
+      };
+
+      window.addEventListener('load', function() {
+
+
+				// The video element on the page to display the webcam
+				let video = document.getElementById('myvideo');
+
+				// Constraints - what do we want?
+				let constraints = { audio: true, video: true }
+
+				// Prompt the user for permission, get the stream
+				navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+					/* Use the stream */
+
+					// Attach to our video object
+					video.srcObject = stream;
+
+					// Wait for the stream to load enough to play
+					video.onloadedmetadata = function(e) {
+						video.play();
+					};
+				})
+				.catch(function(err) {
+					/* Handle the error */
+					alert(err);
+				});
+
+
+
+					var canvas = document.getElementById('mycanvas');
+					var context = canvas.getContext('2d');
+					context.fillStyle="#FF0000";
+					context.fillRect(0,0,canvas.width,canvas.height);
+
+					window.addEventListener('click', function(e) {
+						context.drawImage(video, 0, 0,80,60);
+						//console.log(canvas.toDataURL("image/jpeg"));
+						let v = {
+							image: canvas.toDataURL("image/jpeg"),
+							la: positionx,
+							lo: positiony
+						}
+
+						// socket.emit('location', positionx + ", " + positiony);
+						socket.emit('image', v);
+					});
+
+        window.addEventListener('mousemove', function(e) {
+          //console.log(e);
+          let p = {
+            x: e.pageX,
+            y: e.pageY
+          };
+
+          socket.emit('position', p);
+
+          // let p = new Object();
+          // p.x = e.pageX;
+          // p.y = e.pageY;
+
+          // e.pageX
+          // e.pageY
+        });
+      });
+
+		</script>
+
+
+		<script async defer
+	    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCS2RWK47PqSry3FVuAYUW1UAk1CJMrWXs&callback=initMap">
+	    </script>
+
+	</head>
+	<body>
+		<div id="map"></div>
+
+		<video id="myvideo" width="80" height="60" muted></video>
+		<canvas width="80" height="60" id="mycanvas"></canvas>
+		<img id="otherimage" width="80" height="60" src="" />
+
+ 		<div id="messages">
+			No Messages Yet
+		</div>
+		<div>
+			<input type="text" id="message" name="message">
+			<input type="button" value="message" onclick="sendmessage();">
+			<input type="button" value="other" onclick="sendother();">
+		</div>
+	</body>
+</html>
