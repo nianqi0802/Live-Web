@@ -1,0 +1,651 @@
+<html>
+
+<head>
+	<style>
+		/* Set the size of the div element that contains the map */
+		#map {
+			/* height: 100%;
+			width: 100%; */
+			/* The width is the width of the web page */
+			position: absolute;
+			width: 65%;
+			height: 55%;
+			right: 15%;
+			top: 25%;
+
+
+			/* 16dp — Elevation */
+			box-shadow: 0px 8px 10px rgba(0, 0, 0, 0.2), 0px 6px 30px rgba(0, 0, 0, 0.12), 0px 16px 24px rgba(0, 0, 0, 0.14);
+		}
+
+		#send {
+			background: #202020;
+			border: none;
+			position: absolute;
+			width: 180px;
+			height: 36px;
+			left: 5%;
+			bottom: 20%;
+			border-radius: 8px;
+
+			box-shadow: 0px 7px 8px rgba(0, 0, 0, 0.2), 0px 5px 22px rgba(0, 0, 0, 0.12), 0px 12px 17px rgba(0, 0, 0, 0.14);
+
+			/* Button / Roboto Medium */
+			font-family: Roboto;
+			font-style: normal;
+			font-weight: 500;
+			font-size: 14px;
+			line-height: 16px;
+			/* identical to box height, or 114% */
+			text-align: center;
+			letter-spacing: 0.75px;
+			text-transform: uppercase;
+
+			color: #FFFFFF;
+		}
+
+		#upload {
+			background: none;
+			border: border: 2px solid white;
+			position: absolute;
+			width: 180px;
+			height: 36px;
+			left: 5%;
+			bottom: 27%;
+			border-radius: 8px;
+
+
+
+			/* Button / Roboto Medium */
+			font-family: Roboto;
+			font-style: normal;
+			font-weight: 500;
+			font-size: 14px;
+			line-height: 16px;
+			/* identical to box height, or 114% */
+			text-align: center;
+			letter-spacing: 0.75px;
+			text-transform: uppercase;
+
+			color: #FFFFFF;
+		}
+
+		#gumcanvas {
+			position: absolute;
+			box-shadow: 0px 7px 8px rgba(0, 0, 0, 0.2), 0px 5px 22px rgba(0, 0, 0, 0.12), 0px 12px 17px rgba(0, 0, 0, 0.14);
+			width: 180px;
+			height: 100px;
+			background: #D48340;
+			left: 5%;
+			top: 25%;
+		}
+
+		#title {
+			position: absolute;
+			width: 300px;
+			height: 18px;
+			right: 5%;
+			top: 5%;
+
+			font-family: Roboto;
+			font-style: normal;
+			font-weight: bold;
+			font-size: 100px;
+			line-height: 140px;
+
+			/* White — High Emphasis */
+			color: #FFFFFF;
+		}
+
+		#messages {
+
+			font-family: Roboto;
+			font-style: normal;
+			font-weight: bold;
+			font-size: 20px;
+
+
+			/* White — High Emphasis */
+			color: #FFFFFF;
+		}
+
+		/* #people {
+			position: absolute;
+
+			left: 20%;
+			top: 85%;
+
+			font-family: Roboto;
+			font-style: light;
+			font-weight: normal;
+			font-size: 10px;
+			line-height: 10px;
+
+			color: #FFFFFF;
+		} */
+
+		#Cal {
+			position: absolute;
+
+			left: 8%;
+			top: 50%;
+
+			font-family: Roboto;
+			font-style: normal;
+			font-weight: 500;
+			font-size: 14px;
+			line-height: 16px;
+			/* identical to box height, or 114% */
+			text-align: center;
+			letter-spacing: 0.75px;
+			text-transform: uppercase;
+
+			color: #FFFFFF;
+		}
+
+		body {
+			background: linear-gradient(90deg, #593262 0%, #AE344D 51.06%, #D48340 100%);
+		}
+
+	</style>
+
+
+
+	<script src="p5.min.js"></script>
+	<script src="p5.dom.min.js"></script>
+	<script src="p5.sound.min.js"></script>
+	<script src="tracking-min.js"></script>
+
+
+
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		var socket = io.connect();
+		var positionx;
+		var positiony;
+		var la;
+		var lo;
+		var upload = document.getElementById('upload');
+
+		console.log('initial x = ' + positionx);
+
+		socket.on('connect', function() {
+			console.log("Connected");
+		});
+
+		socket.on('location', function(data) {
+			console.log("location" + data);
+			var col = data.split(",");
+			la = col[0];
+			lo = col[1];
+		});
+
+
+
+		window.addEventListener('load', function() {
+			getLocation();
+
+		});
+
+
+
+		var map;
+		var marker;
+
+		var uluru;
+
+		var colors;
+		var capture;
+		var trackingData;
+		var trackingnum = 0;
+
+		var gumcanvas;
+
+
+		// function setup() {
+		//   gumcanvas = createCanvas(180,300);
+		//   gumcanvas.position(windowWidth*0.05,windowHeight*0.25);
+		//
+		//   background("#202020");
+		//
+		//   gumcanvas.id("gumcanvas");
+		//
+		//
+		//   // capture = createCapture(VIDEO); //capture the webcam
+		//   // capture.position(0,0) //move the capture to the top left
+		//   // capture.style('opacity',0.5)// use this to hide the capture later on (change to 0 to hide)...
+		//   // capture.id("myVideo"); //give the capture an ID so we can use it in the tracker below.
+		//
+		//   tracking.ColorTracker.registerColor('green', function(r, g, b) {
+		//   if (2*g > (r+b+10) && g<150) {
+		//     return true;
+		//   }
+		//   return false;
+		// });
+		//
+		//   colors = new tracking.ColorTracker(['green']);
+		//
+		//
+		// }
+
+
+
+
+		tracking.ColorTracker.registerColor('black', function(r, g, b) {
+			if ((r < 80) && (g < 80) && (b < 80)) {
+				return true;
+			}
+			return false;
+		});
+
+		colors = new tracking.ColorTracker(['black']);
+
+
+
+
+		// Initialize and add the map
+		function initMap() {
+			// The location of Uluru
+			// var uluru = {lat: positionx, lng: positiony};
+			var center = {
+				lat: 40.72,
+				lng: -73.98
+			};
+			// The map, centered at Uluru
+			upload = document.getElementById('upload');
+			map = new google.maps.Map(
+				document.getElementById('map'), {
+					zoom: 13,
+					disableDefaultUI: true,
+					styles: [{
+							"elementType": "geometry",
+							"stylers": [{
+								"color": "#212121"
+							}]
+						},
+						{
+							"elementType": "labels.icon",
+							"stylers": [{
+								"visibility": "off"
+							}]
+						},
+						{
+							"elementType": "labels.text.fill",
+							"stylers": [{
+								"color": "#757575"
+							}]
+						},
+						{
+							"elementType": "labels.text.stroke",
+							"stylers": [{
+								"color": "#212121"
+							}]
+						},
+						{
+							"featureType": "administrative",
+							"elementType": "geometry",
+							"stylers": [{
+								"color": "#757575"
+							}]
+						},
+						{
+							"featureType": "administrative.country",
+							"elementType": "labels.text.fill",
+							"stylers": [{
+								"color": "#9e9e9e"
+							}]
+						},
+						{
+							"featureType": "administrative.land_parcel",
+							"stylers": [{
+								"visibility": "off"
+							}]
+						},
+						{
+							"featureType": "administrative.locality",
+							"elementType": "labels.text.fill",
+							"stylers": [{
+								"color": "#bdbdbd"
+							}]
+						},
+						{
+							"featureType": "poi",
+							"elementType": "labels.text.fill",
+							"stylers": [{
+								"color": "#757575"
+							}]
+						},
+						{
+							"featureType": "poi.park",
+							"elementType": "geometry",
+							"stylers": [{
+								"color": "#181818"
+							}]
+						},
+						{
+							"featureType": "poi.park",
+							"elementType": "labels.text.fill",
+							"stylers": [{
+								"color": "#616161"
+							}]
+						},
+						{
+							"featureType": "poi.park",
+							"elementType": "labels.text.stroke",
+							"stylers": [{
+								"color": "#1b1b1b"
+							}]
+						},
+						{
+							"featureType": "road",
+							"elementType": "geometry.fill",
+							"stylers": [{
+								"color": "#2c2c2c"
+							}]
+						},
+						{
+							"featureType": "road",
+							"elementType": "labels.text.fill",
+							"stylers": [{
+								"color": "#8a8a8a"
+							}]
+						},
+						{
+							"featureType": "road.arterial",
+							"elementType": "geometry",
+							"stylers": [{
+								"color": "#373737"
+							}]
+						},
+						{
+							"featureType": "road.highway",
+							"elementType": "geometry",
+							"stylers": [{
+								"color": "#3c3c3c"
+							}]
+						},
+						{
+							"featureType": "road.highway.controlled_access",
+							"elementType": "geometry",
+							"stylers": [{
+								"color": "#4e4e4e"
+							}]
+						},
+						{
+							"featureType": "road.local",
+							"elementType": "labels.text.fill",
+							"stylers": [{
+								"color": "#616161"
+							}]
+						},
+						{
+							"featureType": "transit",
+							"elementType": "labels.text.fill",
+							"stylers": [{
+								"color": "#757575"
+							}]
+						},
+						{
+							"featureType": "water",
+							"elementType": "geometry",
+							"stylers": [{
+								"color": "#000000"
+							}]
+						},
+						{
+							"featureType": "water",
+							"elementType": "labels.text.fill",
+							"stylers": [{
+								"color": "#3d3d3d"
+							}]
+						}
+					],
+					center: center
+				});
+			// The marker, positioned at Uluru
+			map.addListener('click', function() {
+
+				socket.emit('location', positionx + ", " + positiony);
+
+
+
+
+				socket.on('image', function(imageData) {
+					// Incoming image..
+					console.log(imageData.image);
+					document.getElementById('otherimage').src = imageData.image;
+
+					addMarker(imageData.image);
+
+					marker.setMap(map);
+
+				});
+
+			});
+
+
+
+		}
+
+		function getLocation() {
+			if (navigator.geolocation) { //check if geolocation is available
+				navigator.geolocation.getCurrentPosition(function(position) {
+					positionx = position.coords.latitude;
+					positiony = position.coords.longitude;
+
+				});
+			}
+
+
+
+
+
+
+		}
+
+		function addMarker(x) {
+			//uluru = {lat: positionx, lng: positiony};
+
+			marker = new google.maps.Marker({
+				position: new google.maps.LatLng(la, lo),
+				icon: x,
+				map: map
+			});
+
+
+		}
+
+
+
+		// Receive a message
+		socket.on('message', function(data) {
+			console.log("Got: " + data);
+			document.getElementById('messages').innerHTML += data;
+		});
+
+		socket.on("position", function(data) {
+			//console.log(data);
+		});
+
+		// Receive from any event
+		socket.on('news', function(data) {
+			console.log(data);
+		});
+
+
+
+		var sendmessage = function() {
+			var message = document.getElementById('message').value;
+			console.log("Sending: " + message);
+
+			// Send a messaage
+			socket.send(message);
+		};
+
+		var sendother = function() {
+			var othermessage = document.getElementById('message').value;
+			console.log("sending: " + othermessage);
+
+			// Send any kind of data with a custom event
+			//socket.emit('otherevent',{ othermessage: othermessage });
+			socket.emit('otherevent', othermessage);
+		};
+
+		var putphoto;
+		window.addEventListener('load', function() {
+
+
+			// The video element on the page to display the webcam
+			let video = document.getElementById('myvideo');
+
+			// Constraints - what do we want?
+			let constraints = {
+				audio: true,
+				video: true
+			}
+
+			// Prompt the user for permission, get the stream
+			navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+					/* Use the stream */
+
+					// Attach to our video object
+					video.srcObject = stream;
+
+					// Wait for the stream to load enough to play
+					video.onloadedmetadata = function(e) {
+						video.play();
+					};
+				})
+				.catch(function(err) {
+					/* Handle the error */
+					alert(err);
+				});
+
+
+
+			var canvas = document.getElementById('mycanvas');
+			var gum_canvas = document.getElementById('gumcanvas');
+			var context = canvas.getContext('2d');
+			var gum_context = gum_canvas.getContext('2d');
+
+			context.fillStyle = "#000000";
+			context.fillRect(0, 0, canvas.width, canvas.height);
+
+			// window.addEventListener('click', function(e)
+			putphoto = function() {
+				context.drawImage(video, 0, 0, 60, 45);
+
+				gum_context.drawImage(video, 0, 0, 180,100);
+				//console.log(canvas.toDataURL("image/jpeg"));
+
+				tracking.track('#otherimage', colors);
+
+				colors.on('track', function(event) { //this happens each time the tracking happens
+					trackingData = event.data // break the trackingjs data into a global so we can access it with p5
+				});
+
+
+
+				if (trackingData) {
+					trackingnum = 0;
+					for (var i = 0; i < trackingData.length; i++) { //loop through each of the detected colors
+						// console.log( trackingData[i] )
+						trackingnum += trackingData[i].width * trackingData[i].height;
+					}
+				}
+				else{
+					trackingnum = 0;
+				}
+
+				document.getElementById("Cal").innerHTML = "Density: "+trackingnum;
+
+				let v = {
+					image: canvas.toDataURL("image/jpeg")
+				}
+
+
+
+
+				socket.emit('image', v);
+
+
+				console.log(trackingnum);
+
+			};
+
+			window.addEventListener('mousemove', function(e) {
+				//console.log(e);
+				let p = {
+					x: e.pageX,
+					y: e.pageY
+				};
+
+				socket.emit('position', p);
+
+				// let p = new Object();
+				// p.x = e.pageX;
+				// p.y = e.pageY;
+
+				// e.pageX
+				// e.pageY
+			});
+		});
+	</script>
+
+
+	<script async defer src="https://maps.googleapis.com/maps/api/js?key==initMap">
+		< link rel = "stylesheet"
+		href = "https://fonts.googleapis.com/icon?family=Material+Icons" >
+			<
+			link rel = "stylesheet"
+		href = "https://code.getmdl.io/1.3.0/material.indigo-pink.min.css" >
+			<
+			script defer src = "https://code.getmdl.io/1.3.0/material.min.js" >
+	</script>
+	</script>
+
+</head>
+
+<body>
+
+
+
+	<div id="map"></div>
+	<input id="send" type="button" value="USELESS BUTTON">
+	<input id="upload" type="button" value="CAPTURE" onclick="putphoto();">
+	<canvas id="gumcanvas"></canvas>
+
+	<!-- <input type="file" accept="image/*" capture="camera"> -->
+
+
+	<div id="title">
+		NEW YORK GUM SPOTS MAP
+	</div>
+
+	<!-- <div id="people">
+		CURRENTLY 0 PEOPLE ONLINE
+	</div> -->
+
+	<div id="Cal">
+		Density: 0
+	</div>
+
+
+	<video id="myvideo" width="60" height="45" muted></video>
+	<canvas width="60" height="45" id="mycanvas"></canvas>
+	<img id="otherimage" width="60" height="45" src="" />
+
+
+
+
+	<div id="messages">
+		No Messages Yet
+	</div>
+	<div>
+		<input type="text" id="message" name="message">
+		<input type="button" value="message" onclick="sendmessage();">
+		<input type="button" value="other" onclick="sendother();">
+	</div>
+</body>
+
+</html>
