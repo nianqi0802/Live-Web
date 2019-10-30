@@ -1,0 +1,197 @@
+<html>
+
+<head>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script type="text/javascript">
+        let audioNode;
+        let mediaRecorder = false;
+        var constraints = {
+            audio: true
+        };
+        var startRecord;
+        let endRecord;
+
+        var socket = io.connect('//gmg262.itp.io:8081');
+
+        audioNode = document.getElementById('audio');
+
+        socket.on('connect', function() {
+            console.log("Connected");
+        });
+
+
+        var clip_number = 0;
+        var subtitle = [' I imagine, right now, you must be feeling a bit like Alice, tumbling down the rabbit hole?', 'You could say that. I dont like the idea that Im not in controrl of my life.','I can see it in your eyes.  You have the look of a man who accept swhat he sees because he is expecting to wake up.','You are Morpheus, you are a legend. Most hackers would die to meet you.','Yes.  Thank you.  But I think we both know there is more to it than that.','It is not magic.'];
+        var videotime = [0, 3, 9, 14.8, 23.5, 28.5,37 ];
+        var video;
+
+        window.addEventListener('load', function() {
+            video = document.getElementById('mainvideo');
+
+
+        });
+
+
+        socket.on('time', function(data) {
+            //console.log("Got: " + data);
+            playvideo();
+            clip_number = data;
+        });
+
+
+        function startRecord(){
+            startRecording();
+        }
+        
+        function playvideo() {
+
+            //startRecording();
+            //console.log('videoplay!');
+            //console.log('playvideoclipnum' + clip_number);
+            document.getElementById("record").style.visibility = "hidden";
+
+            //display part of the text
+            document.getElementById('subtitle').innerHTML = subtitle[clip_number];
+
+            //change color of the text
+            if (clip_number % 2 == 0) {
+                document.getElementById("subtitle").style.color = "blue";
+            } else {
+                document.getElementById("subtitle").style.color = "red";
+            }
+
+
+            //play a part of VIDEO
+            //console.log(videotime[clip_number]);
+            video.currentTime = videotime[clip_number];
+            //console.log(clip_number);
+            //console.log(video.currentTime);
+            video.muted = true;
+            video.play();
+
+            setInterval(function() {
+                //console.log(video.currentTime);
+                // var video_currenttime = Math.floor(video.currentTime);
+                if (video.currentTime >= videotime[clip_number + 1]) {
+                    document.getElementById("record").style.visibility = "visible";
+                    video.pause();
+                    clip_number++;
+                    //stopRecording();
+                    console.log('play end clip_number'+clip_number);
+
+                    // socket.emit('justvideo', clip_number);
+
+
+
+
+                };
+            }, 100);
+
+
+
+        };
+
+
+
+
+        function timeit() {
+            //console.log('pushdata');
+            //video.pause();
+            stopRecording();
+            socket.emit('time', clip_number);
+
+
+        };
+
+
+        function startRecording() {
+            if (mediaRecorder) {
+                mediaRecorder.start();
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder) {
+                mediaRecorder.stop()
+                //repeat is in here
+            }
+        }
+
+        //audio portion
+        function setMediaRecorder(mediaStream) {
+            mediaRecorder = new MediaRecorder(mediaStream);
+
+            mediaRecorder.onstart = function(e) {
+                this.chunks = [];
+            };
+            mediaRecorder.ondataavailable = function(e) {
+                this.chunks.push(e.data);
+            };
+            mediaRecorder.onstop = function(e) {
+                var blob = new Blob(this.chunks, {
+                    'type': 'audio/ogg; codecs=opus'
+                });
+                socket.emit('radio', blob);
+                console.log('emitradio');
+            };
+        }
+
+        // When the client receives a voice message it will play the sound
+        socket.on('voice', function(arrayBuffer) {
+            var blob = new Blob([arrayBuffer], {
+                'type': 'audio/ogg; codecs=opus'
+            });
+            var audio = document.createElement('audio');
+            audio.src = window.URL.createObjectURL(blob);
+            audio.play();
+
+            console.log('audio is playing once');
+
+
+        });
+
+        navigator.mediaDevices.getUserMedia(constraints).then(setMediaRecorder).catch(console.log);
+
+
+        function playall(){
+            // for(let i = 0;i<6;i+2){
+            //     var recording_audio = new Audio('theaudio_'+ i + '.ogg');
+            //     recording_audio.play();
+            // }
+            var i = 0;
+            var recording_audio = new Audio('theaudio_'+ i + '.ogg');
+
+            recording_audio.play();
+        };
+
+
+    </script>
+
+
+</head>
+
+<body>
+
+
+    <video id="mainvideo" width="720" height="480" src="source.mp4" /></video>
+
+
+
+
+
+
+    <div id="audio"></div>
+
+    <input type="button" value="play all" onclick="playall()">
+    <div>
+    <img id = "subtitle_frame" src="pngfind.png" >
+    <p id="subtitle">It is an honor.  </p>
+    </div>
+    <button id="record" onclick="startRecord()">Record</button>
+    <button id="play" onclick="timeit()">Play</button>
+
+</body>
+
+</html>
